@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Traffic Flow Lab — Roundabout Simulation</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#121a2d;--panel2:#172239;--line:#263550;--text:#e8eefb;--muted:#91a2bf;--cyan:#4dd7e5;--green:#57df9b;--yellow:#ffd166;--red:#ff647c;--blue:#7c9cff}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 20% -10%,#1a2a48 0,transparent 45%),var(--bg);color:var(--text);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,select,input{font:inherit}button{cursor:pointer;border:1px solid var(--line);background:#1a2740;color:var(--text);border-radius:9px;padding:9px 12px;transition:.15s}button:hover{border-color:#54739e;transform:translateY(-1px)}button.primary{background:var(--cyan);color:#07131e;border-color:transparent;font-weight:800}button.active{border-color:var(--cyan);color:var(--cyan)}.app{max-width:1600px;margin:auto;padding:22px}.top{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:18px}.brand{display:flex;gap:12px;align-items:center}.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#4dd7e5,#7c9cff);display:grid;place-items:center;color:#06121d;font-size:22px;font-weight:900}.eyebrow{color:var(--cyan);text-transform:uppercase;font-size:10px;letter-spacing:2px;font-weight:800}.top h1{font-size:clamp(20px,3vw,29px);margin:1px 0;font-weight:800;letter-spacing:-.8px}.top p{margin:0;color:var(--muted);font-size:12px}.status{display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--line);border-radius:99px;color:var(--muted);font-size:12px;white-space:nowrap}.dot{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 12px #57df9b66}
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start}.panel{background:linear-gradient(160deg,#141e32,#101829);border:1px solid var(--line);border-radius:15px;overflow:hidden}.side{padding:17px;position:sticky;top:12px}.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.section-head h2,.card h2{font-size:13px;margin:0;font-weight:800;letter-spacing:.2px}.small{font-size:11px;color:var(--muted)}.control-group{padding:14px 0;border-top:1px solid #26355088}.control-group:first-of-type{border-top:0}.control-title{font-weight:750;font-size:12px;margin-bottom:11px;display:flex;justify-content:space-between;align-items:center}.control-row{display:flex;gap:7px}.control-row button{flex:1;font-size:12px;padding:9px 5px}.field{margin:13px 0}.field-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:7px}.field label{color:#c7d2e7;font-size:12px}.value{color:var(--cyan);font-variant-numeric:tabular-nums;font-weight:800;font-size:12px}input[type=range]{width:100%;accent-color:var(--cyan);cursor:pointer}select{width:100%;padding:10px;background:#0d1526;border:1px solid var(--line);border-radius:8px;color:var(--text)}.preset-note{color:var(--muted);font-size:11px;margin:8px 0 0}.toggle-line{display:flex;align-items:center;justify-content:space-between;color:#c7d2e7;font-size:12px;margin-top:12px}.toggle-line input{accent-color:var(--cyan)}
+.main{min-width:0;display:grid;gap:15px}.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.toolbar .spacer{flex:1}.sim-wrap{padding:0}.sim-head{display:flex;justify-content:space-between;align-items:center;padding:15px 17px 11px;gap:12px}.sim-head h2{margin:0;font-size:14px}.sim-head p{margin:3px 0 0;color:var(--muted);font-size:11px}.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:10px;color:var(--muted)}.legend span{display:flex;align-items:center;gap:5px}.swatch{width:8px;height:8px;border-radius:3px}.canvas-holder{position:relative;background:#0a1220;border-top:1px solid #263550;border-bottom:1px solid #263550}.canvas-holder canvas{display:block;width:100%;height:380px}.overlay{position:absolute;top:12px;left:13px;display:flex;gap:7px;pointer-events:none}.chip{font-size:10px;padding:5px 8px;border:1px solid #ffffff19;border-radius:7px;background:#0c1525d9;color:#c5d6ee}.signal{position:absolute;right:14px;top:12px;display:flex;align-items:center;gap:7px;background:#0c1525e8;border:1px solid var(--line);border-radius:9px;padding:7px 10px}.light{width:9px;height:9px;border-radius:50%;background:#27374d}.light.on.green{background:var(--green);box-shadow:0 0 12px #57df9b66}.signal strong{font-size:11px}.sim-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 16px;color:var(--muted);font-size:11px}.metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.metric{padding:14px 14px 12px;min-width:0}.metric-top{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:10px;gap:4px}.metric-icon{font-size:15px}.metric-value{font-size:clamp(20px,2vw,28px);font-weight:850;letter-spacing:-1px;margin:8px 0 3px;font-variant-numeric:tabular-nums}.metric-sub{font-size:10px;color:var(--muted)}.metric-bar{height:3px;border-radius:8px;background:#25334b;margin-top:12px;overflow:hidden}.metric-bar i{display:block;height:100%;background:var(--cyan);width:40%;transition:width .2s}.graphs{display:grid;grid-template-columns:1fr 1fr;gap:15px}.card{padding:15px;min-width:0}.card-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:12px}.card-head p{margin:4px 0 0;color:var(--muted);font-size:10px}.chart-area{height:190px;position:relative}.chart-area canvas{width:100%;height:100%;display:block}.graph-legend{display:flex;gap:11px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:10px}.graph-legend span{display:flex;align-items:center;gap:5px}.line-key{width:14px;height:3px;border-radius:4px}.bottom-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:15px}.equations{display:grid;gap:9px}.eq{padding:10px;background:#0d1627;border:1px solid #23334c;border-radius:9px}.eq code{font-size:12px;color:#9be9f0;white-space:normal}.eq p{font-size:10px;color:var(--muted);margin:5px 0 0}.event-list{display:grid;gap:8px}.event{display:flex;gap:9px;align-items:flex-start;font-size:11px;color:#c5d2e6}.event-mark{width:7px;height:7px;flex:0 0 7px;margin-top:4px;border-radius:50%;background:var(--cyan)}.event time{color:var(--muted);margin-right:6px;font-variant-numeric:tabular-nums}.footer{text-align:center;color:#7183a0;font-size:10px;margin-top:17px}.mobile-controls{display:none}.hidden{display:none!important}@media(max-width:1050px){.layout{grid-template-columns:260px minmax(0,1fr)}.metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.graphs{grid-template-columns:1fr}}@media(max-width:760px){.app{padding:12px}.top{align-items:flex-start}.status{display:none}.layout{grid-template-columns:1fr}.side{position:static}.mobile-controls{display:flex;justify-content:space-between;align-items:center}.side.collapsed .side-inner{display:none}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.metrics .metric:last-child{grid-column:span 2}.canvas-holder canvas{height:300px}.bottom-grid{grid-template-columns:1fr}.sim-head{align-items:flex-start;flex-direction:column}.legend{gap:9px}}
+</style></head>
+<body><div class="app">
+<header class="top"><div class="brand"><div class="logo">⊙</div><div><div class="eyebrow">PLANology · URBAN SYSTEMS LAB</div><h1>Roundabout Traffic Simulator</h1><p>Explore circulating flow, yield mechanics, and multi-directional approach rates.</p></div></div><div class="status"><span class="dot" id="statusDot"></span><span id="runStatus">Simulation ready</span></div></header>
+<div class="layout"><aside class="panel side" id="sidebar"><div class="mobile-controls"><strong>Simulation controls</strong><button id="collapseBtn">Hide controls −</button></div><div class="side-inner"><div class="section-head"><h2>CONTROL CENTER</h2><span class="small">MODEL v2.0</span></div>
+<div class="control-group"><div class="control-title">Playback</div><div class="control-row"><button id="playBtn" class="primary">▶ Play</button><button id="pauseBtn">Ⅱ Pause</button><button id="stepBtn">▸ Step</button><button id="resetBtn">↺</button></div><div class="field"><div class="field-top"><label for="speedTime">Simulation speed</label><span class="value" id="speedTimeVal">1.0×</span></div><input id="speedTime" type="range" min="0.1" max="5" step="0.1" value="1"></div></div>
+<div class="control-group"><div class="control-title">Scenario preset</div><select id="preset"><option value="normal">Balanced Flow</option><option value="rush">Rush Hour Influx</option><option value="gridlock">Heavy Circulating Saturation</option></select><p class="preset-note" id="presetNote">Balanced 4-way incoming demand with yield-to-left mechanics.</p></div>
+<div class="control-group"><div class="control-title">Junction parameters <span class="small">LIVE UPDATE</span></div>
+<div class="field"><div class="field-top"><label for="demand">Inflow rate (each arm)</label><span class="value" id="demandVal">22 veh/min</span></div><input id="demand" type="range" min="5" max="80" step="1" value="22"></div>
+<div class="field"><div class="field-top"><label for="limit">Speed limit</label><span class="value" id="limitVal">40 km/h</span></div><input id="limit" type="range" min="20" max="60" step="1" value="40"></div>
+<div class="field"><div class="field-top"><label for="dt">Euler time step (Δt)</label><span class="value" id="dtVal">0.10 s</span></div><input id="dt" type="range" min="0.01" max="0.5" step="0.01" value="0.1"></div>
+<div class="field"><div class="field-top"><label for="radius">Ring radius</label><span class="value" id="radiusVal">110 m</span></div><input id="radius" type="range" min="80" max="160" step="5" value="110"></div>
+<label class="toggle-line"><span>Show vehicle trails</span><input id="trails" type="checkbox" checked></label>
+</div><div class="control-group"><div class="control-title">Yield rules</div><p class="small">Entering vehicles must yield to circulating traffic inside the ring. Multi-lane weaving governed by gap acceptance.</p></div></div></aside>
+<main class="main"><div class="toolbar"><button id="toolbarPlay" class="primary">▶ Start simulation</button><button id="toolbarReset">↺ Reset</button><span class="spacer"></span><span class="small">Elapsed time <strong id="clock" style="color:var(--text);font-variant-numeric:tabular-nums">00:00</strong></span></div>
+<section class="panel sim-wrap"><div class="sim-head"><div><h2>ROUNDABOUT JUNCTION VIEW</h2><p>4 Approach arms (North, South, East, West) · Dual circulating ring lanes</p></div><div class="legend"><span><i class="swatch" style="background:#57df9b"></i>Free flow</span><span><i class="swatch" style="background:#ffd166"></i>Yielding</span><span><i class="swatch" style="background:#ff647c"></i>Stopped</span></div></div><div class="canvas-holder"><canvas id="roadCanvas" aria-label="Animated multi-lane roundabout simulation"></canvas><div class="overlay"><span class="chip" id="demandChip">INFLOW 22/MIN/ARM</span><span class="chip" id="densityChip">RING DENSITY 0 VEH/KM</span></div><div class="signal"><span class="light on green"></span><strong id="signalText">YIELD TO RING</strong></div></div><div class="sim-foot"><span id="roadLabel">4-Way Roundabout Junction · 2 circulating lanes</span><span id="simMessage">Ready. Press Play to begin.</span></div></section>
+<section class="metrics"><div class="panel metric"><div class="metric-top">AVERAGE SPEED <span class="metric-icon">↗</span></div><div class="metric-value" id="avgSpeed">0.0 <small style="font-size:11px;color:var(--muted)">km/h</small></div><div class="metric-sub" id="speedSub">of 40 km/h limit</div><div class="metric-bar"><i id="speedBar"></i></div></div><div class="panel metric"><div class="metric-top">QUEUE LENGTH <span class="metric-icon">≋</span></div><div class="metric-value" id="queue">0 <small style="font-size:11px;color:var(--muted)">veh</small></div><div class="metric-sub">Waiting at entry yields</div><div class="metric-bar"><i id="queueBar" style="background:var(--yellow)"></i></div></div><div class="panel metric"><div class="metric-top">THROUGHPUT <span class="metric-icon">⇢</span></div><div class="metric-value" id="throughput">0 <small style="font-size:11px;color:var(--muted)">veh/min</small></div><div class="metric-sub">Completed exits</div><div class="metric-bar"><i id="throughputBar" style="background:var(--green)"></i></div></div><div class="panel metric"><div class="metric-top">CONGESTION <span class="metric-icon">◉</span></div><div class="metric-value" id="congestion">0<span style="font-size:14px">%</span></div><div class="metric-sub" id="congestionSub">Free-flow conditions</div><div class="metric-bar"><i id="congestionBar" style="background:var(--red)"></i></div></div><div class="panel metric"><div class="metric-top">RING DENSITY <span class="metric-icon">▦</span></div><div class="metric-value" id="density">0 <small style="font-size:11px;color:var(--muted)">veh/km</small></div><div class="metric-sub">Circulating vehicle concentration</div><div class="metric-bar"><i id="densityBar" style="background:var(--blue)"></i></div></div></section>
+<section class="graphs"><div class="panel card"><div class="card-head"><div><h2>TRAFFIC PERFORMANCE</h2><p>Live time series · last 120 samples</p></div><span class="small">Chart A</span></div><div class="chart-area"><canvas id="performanceChart"></canvas></div><div class="graph-legend"><span><i class="line-key" style="background:#4dd7e5"></i>Avg speed (km/h)</span><span><i class="line-key" style="background:#ffd166"></i>Queue (vehicles)</span><span><i class="line-key" style="background:#ff647c"></i>Congestion (%)</span></div></div><div class="panel card"><div class="card-head"><div><h2>FLOW & DENSITY</h2><p>Completion rate and ring occupancy</p></div><span class="small">Chart B</span></div><div class="chart-area"><canvas id="flowChart"></canvas></div><div class="graph-legend"><span><i class="line-key" style="background:#57df9b"></i>Throughput (veh/min)</span><span><i class="line-key" style="background:#7c9cff"></i>Density (veh/km)</span></div></div></section>
+<section class="bottom-grid"><div class="panel card"><div class="card-head"><div><h2>ROUNDABOUT MATHEMATICAL MODEL</h2><p>Centripetal kinematics and gap-acceptance priority</p></div></div><div class="equations"><div class="eq"><code>a<sub>centripetal</sub> = v² / R</code><p>Circulating acceleration vector directed toward the roundabout center.</p></div><div class="eq"><code>t<sub>gap</sub> = (s<sub>circulating</sub> - s<sub>entry</sub>) / max(v, 0.1) ≥ t<sub>critical</sub></code><p>Yield condition: entering vehicle waits unless gap exceeds critical headway (2.5s).</p></div><div class="eq"><code>v(t + Δt) = clamp(v(t) + a(t) · Δt, 0, v<sub>limit</sub>)</code><p>Kinematic speed update incorporating driver car-following and curvature limits.</p></div><div class="eq"><code>ρ = N<sub>ring</sub> / (2π · R<sub>km</sub>), &nbsp; congestion = 100 · (1 − v̄ / v<sub>limit</sub>)</code><p>Ring density metrics and speed-degradation congestion indices.</p></div></div></div><div class="panel card"><div class="card-head"><div><h2>SIMULATION EVENT LOG</h2><p>Junction flow observations and priority triggers</p></div><button id="clearLog">Clear</button></div><div class="event-list" id="eventList"><div class="event"><i class="event-mark"></i><div><time>00:00</time>Roundabout simulation initialized. All arms active.</div></div></div></div></section>
+</main></div><div class="footer">Educational urban planning model · Roundabout priority mechanics active.</div></div>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);const canvas=$('roadCanvas'),ctx=canvas.getContext('2d');const pc=$('performanceChart'),pctx=pc.getContext('2d'),fc=$('flowChart'),fctx=fc.getContext('2d');
+const defaults={demand:22,limit:40,dt:.1,radius:110,speedTime:1};let cfg={...defaults},vehicles=[],simTime=0,running=false,lastFrame=0,accumulator=0,spawnAccumulators=[0,0,0,0],passed=0,history=[],events=[],nextId=1,lastSample=0,frame=0;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));const rand=(a,b)=>a+Math.random()*(b-a);const kmh=v=>v*3.6;const fmtTime=t=>{let m=Math.floor(t/60),s=Math.floor(t%60);return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')};
+
+function log(msg,type='info'){const item={t:simTime,msg,type};events.unshift(item);events=events.slice(0,8);renderLog()}
+function renderLog(){const list=$('eventList');list.innerHTML='';if(!events.length){list.innerHTML='<div class="small">No events yet.</div>';return}events.forEach(e=>{const row=document.createElement('div');row.className='event';const dot=document.createElement('i');dot.className='event-mark';dot.style.background=e.type==='warn'?'var(--yellow)':e.type==='good'?'var(--green)':'var(--cyan)';const d=document.createElement('div'),time=document.createElement('time');time.textContent=fmtTime(e.t);d.append(time,document.createTextNode(e.msg));row.append(dot,d);list.append(row)})}
+function reset(){running=false;simTime=0;accumulator=0;spawnAccumulators=[0,0,0,0];passed=0;nextId=1;vehicles=[];history=[];lastSample=0;for(let i=0;i<8;i++)history.push({t:0,speed:0,queue:0,throughput:0,congestion:0,density:0});log('Simulation reset. Roundabout ready.');updateUI();drawRoad();drawCharts();setRunStatus()}
+
+function applyPreset(name){if(name==='normal'){Object.assign(cfg,{demand:22,limit:40,radius:110});$('presetNote').textContent='Balanced 4-way incoming demand with yield-to-left mechanics.'}else if(name==='rush'){Object.assign(cfg,{demand:55,limit:35,radius:110});$('presetNote').textContent='Heavy inflow causes queue backups at entry yield lines.'}else{Object.assign(cfg,{demand:75,limit:30,radius:100});$('presetNote').textContent='Gridlock threshold reached with high ring saturation.'}syncControls();vehicles=[];spawnAccumulators=[0,0,0,0];passed=0;log('Preset changed: '+$('preset').selectedOptions[0].text+'.');updateUI()}
+function syncControls(){for(const k of Object.keys(defaults)){if($(k))$(k).value=cfg[k]}const specs={demand:v=>v+' veh/min',limit:v=>v+' km/h',dt:v=>Number(v).toFixed(2)+' s',radius:v=>v+' m',speedTime:v=>Number(v).toFixed(1)+'×'};Object.keys(specs).forEach(k=>$(k+'Val').textContent=specs[k](cfg[k]));$('roadLabel').textContent='4-Way Roundabout Junction · Radius: '+cfg.radius+'m';$('demandChip').textContent='INFLOW '+cfg.demand+'/MIN/ARM'}
+function readControls(){['demand','limit','dt','radius','speedTime'].forEach(k=>{cfg[k]=Number($(k).value)});syncControls();updateUI()}
+
+function spawnVehicle(arm){
+    // arms: 0:North(top), 1:East(right), 2:South(bottom), 3:West(left)
+    const lane=Math.random()<.5?0:1;
+    let startX=0, startY=0, angle=0;
+    const r=cfg.radius;
+    if(arm===0){startX=0; startY=-(r+180); angle=Math.PI/2;}
+    else if(arm===1){startX=r+180; startY=0; angle=Math.PI;}
+    else if(arm===2){startX=0; startY=r+180; angle=-Math.PI/2;}
+    else{startX=-(r+180); startY=0; angle=0;}
+    
+    // choose destination arm (different from start)
+    let dest;
+    do{dest=Math.floor(Math.random()*4);}while(dest===arm);
+    
+    vehicles.push({id:nextId++, arm, dest, x:startX, y:startY, v:rand(4,7), a:0, lane, length:15, trail:[]});
+}
+
+function metrics(){
+    const n=vehicles.length;
+    const ringVehs=vehicles.filter(v=>Math.hypot(v.x,v.y)<cfg.radius+40);
+    const avg=n?vehicles.reduce((s,v)=>s+v.v,0)/n:cfg.limit/3.6;
+    const queue=vehicles.filter(v=>v.v<1.0 && Math.abs(Math.hypot(v.x,v.y)-(cfg.radius+35))<30).length;
+    const density=ringVehs.length/(2*Math.PI*(cfg.radius/1000));
+    const congestion=clamp((1-kmh(avg)/cfg.limit)*100,0,100);
+    const rate=simTime>0?passed/(simTime/60):0;
+    return{speed:clamp(kmh(avg),0,cfg.limit),queue,throughput:rate,congestion,density};
+}
+
+function step(dt){
+    simTime+=dt;
+    const desired=cfg.limit/3.6;
+    
+    // Spawn incoming vehicles from 4 arms
+    for(let i=0;i<4;i++){
+        spawnAccumulators[i]+=cfg.demand/60*dt;
+        while(spawnAccumulators[i]>=1){
+            spawnVehicle(i);
+            spawnAccumulators[i]-=1;
+        }
+    }
+    
+    const r=cfg.radius;
+    
+    for(let i=0;i<vehicles.length;i++){
+        const v=vehicles[i];
+        const distFromCenter=Math.hypot(v.x, v.y);
+        const currentAngle=Math.atan2(v.y, v.x);
+        
+        let targetSpeed=desired;
+        
+        // Approach phase (outside the central ring radius + 35)
+        if(distFromCenter > r+25){
+            // Check yield line at approach entry (approx radius + 35)
+            const approachingYield = distFromCenter > r+25 && distFromCenter < r+55;
+            if(approachingYield){
+                // Yield to circulating vehicles in the ring on the left/incoming path
+                const circulatingNear = vehicles.some(w => {
+                    const wDist = Math.hypot(w.x, w.y);
+                    return wDist >= r-10 && wDist <= r+25;
+                });
+                if(circulatingNear){
+                    targetSpeed=0;
+                }
+            }
+            
+            // Move straight toward center along arm axis
+            if(v.arm===0) { v.y += v.v*dt * (v.y<0?1:-1); if(v.y >= -(r+30)) { /* entered ring */ } }
+            if(v.arm===1) { v.x -= v.v*dt; }
+            if(v.arm===2) { v.y -= v.v*dt; }
+            if(v.arm===3) { v.x += v.v*dt; }
+            
+            // Transition onto ring once near radius
+            if(Math.abs(distFromCenter - r) < 15 && distFromCenter > r-5){
+                // Snap onto circular orbit
+            }
+        } else if(distFromCenter >= r-15 && distFromCenter <= r+25) {
+            // Circulating inside the roundabout ring (counter-clockwise: decreasing angle or increasing angle depending on coordinate system)
+            // Let's circulate counter-clockwise: angular velocity omega = v / r
+            const omega = v.v / r;
+            const newAngle = currentAngle + omega*dt;
+            v.x = r * Math.cos(newAngle);
+            v.y = r * Math.sin(newAngle);
+            
+            // Check if vehicle has reached its destination exit angle
+            let targetAngle=0;
+            if(v.dest===0) targetAngle = Math.PI/2;
+            else if(v.dest===1) targetAngle = Math.PI;
+            else if(v.dest===2) targetAngle = -Math.PI/2;
+            else if(v.dest===3) targetAngle = 0;
+            
+            // If close to destination exit angle, exit outward
+            let angleDiff = Math.abs(newAngle - targetAngle);
+            if(angleDiff < 0.15) {
+                // Exit outward along exit arm
+                v.arm = v.dest + 10; // marked as exiting
+            }
+        } else {
+            // Exiting arm vector
+            if(v.arm===10) { v.y -= v.v*dt; } // North exit
+            if(v.arm===11) { v.x -= v.v*dt; } // East exit
+            if(v.arm===12) { v.y += v.v*dt; } // South exit
+            if(v.arm===13) { v.x += v.v*dt; } // West exit
+            
+            if(Math.hypot(v.x, v.y) > r + 200){
+                passed++;
+                vehicles.splice(i,1);
+                i--;
+                continue;
+            }
+        }
+        
+        // Car following collision avoidance with nearby vehicles in same general sector
+        for(let j=0;j<vehicles.length;j++){
+            if(i===j) continue;
+            const other=vehicles[j];
+            const dist=Math.hypot(v.x-other.x, v.y-other.y);
+            if(dist < 22){
+                targetSpeed = Math.min(targetSpeed, other.v * 0.8);
+            }
+        }
+        
+        const a=clamp((targetSpeed-v.v)*1.2,-4,2);
+        v.a=a;
+        v.v=clamp(v.v+a*dt,0,desired);
+        
+        if($('trails').checked && frame%4===0){
+            v.trail.push({x:v.x, y:v.y});
+            if(v.trail.length>12) v.trail.shift();
+        }
+    }
+    
+    if(simTime-lastSample>=1){
+        const m=metrics();
+        history.push({t:simTime,...m});
+        if(history.length>120) history.shift();
+        lastSample=simTime;
+        drawCharts();
+        updateMetrics(m);
+    }
+    
+    if(vehicles.length>100) vehicles.splice(0, vehicles.length-100);
+    updateUI();
+}
+
+function setRunStatus(){
+    $('runStatus').textContent=running?'Simulation running':'Simulation paused';
+    $('statusDot').style.background=running?'var(--green)':'var(--yellow)';
+    $('playBtn').textContent=running?'▶ Running':'▶ Play';
+    $('toolbarPlay').textContent=running?'▶ Running':'▶ Start simulation';
+    $('playBtn').classList.toggle('active',running);
+}
+
+function updateMetrics(m=metrics()){
+    $('avgSpeed').innerHTML=m.speed.toFixed(1)+' <small style="font-size:11px;color:var(--muted)">km/h</small>';
+    $('queue').innerHTML=m.queue+' <small style="font-size:11px;color:var(--muted)">veh</small>';
+    $('throughput').innerHTML=m.throughput.toFixed(1)+' <small style="font-size:11px;color:var(--muted)">veh/min</small>';
+    $('congestion').innerHTML=m.congestion.toFixed(0)+'<span style="font-size:14px">%</span>';
+    $('density').innerHTML=m.density.toFixed(1)+' <small style="font-size:11px;color:var(--muted)">veh/km</small>';
+    
+    $('speedSub').textContent='of '+cfg.limit+' km/h limit';
+    $('congestionSub').textContent=m.congestion<20?'Free-flow conditions':m.congestion<55?'Moderate friction':'Heavy ring saturation';
+    $('speedBar').style.width=100*m.speed/Math.max(1,cfg.limit)+'%';
+    $('queueBar').style.width=clamp(m.queue/20*100,0,100)+'%';
+    $('throughputBar').style.width=clamp(m.throughput/60*100,0,100)+'%';
+    $('congestionBar').style.width=m.congestion+'%';
+    $('densityBar').style.width=clamp(m.density/100*100,0,100)+'%';
+    $('densityChip').textContent='RING DENSITY '+m.density.toFixed(1)+' VEH/KM';
+}
+
+function updateUI(){
+    updateMetrics();
+    $('clock').textContent=fmtTime(simTime);
+    $('simMessage').textContent=running?'Roundabout physics active.':(simTime===0?'Ready. Press Play to begin.':'Paused at '+fmtTime(simTime)+'.');
+    setRunStatus();
+}
+
+function resize(c,context){
+    const r=c.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);
+    const w=Math.max(1,Math.round(r.width*dpr)),h=Math.max(1,Math.round(r.height*dpr));
+    if(c.width!==w||c.height!==h){c.width=w;c.height=h}
+    context.setTransform(dpr,0,0,dpr,0,0);
+    return{w:r.width,h:r.height}
+}
+
+function drawRoad(){
+    const {w,h}=resize(canvas,ctx);
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle='#0a1220';
+    ctx.fillRect(0,0,w,h);
+    
+    const cx=w/2, cy=h/2;
+    const r=cfg.radius;
+    
+    ctx.save();
+    ctx.translate(cx, cy);
+    
+    // Draw 4 approach roads (arms)
+    ctx.fillStyle='#202b3d';
+    ctx.fillRect(-35, -h/2, 70, h);
+    ctx.fillRect(-w/2, -35, w, 70);
+    
+    // Draw road markings (center dividers)
+    ctx.strokeStyle='#7d8ca2';
+    ctx.lineWidth=1;
+    ctx.setLineDash([10,10]);
+    ctx.beginPath();
+    ctx.moveTo(0, -h/2); ctx.lineTo(0, -r-15);
+    ctx.moveTo(0, r+15); ctx.lineTo(0, h/2);
+    ctx.moveTo(-w/2, 0); ctx.lineTo(-r-15, 0);
+    ctx.moveTo(r+15, 0); ctx.lineTo(w/2, 0);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    // Draw Roundabout Ring (circulating roadway)
+    ctx.beginPath();
+    ctx.arc(0, 0, r+25, 0, Math.PI*2);
+    ctx.arc(0, 0, r-25, 0, Math.PI*2, true);
+    ctx.fillStyle='#202b3d';
+    ctx.fill();
+    
+    ctx.strokeStyle='#65758b';
+    ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(0, 0, r+25, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, r-25, 0, Math.PI*2); ctx.stroke();
+    
+    // Draw central island (circulating center)
+    ctx.beginPath();
+    ctx.arc(0, 0, r-30, 0, Math.PI*2);
+    ctx.fillStyle='#132035';
+    ctx.fill();
+    ctx.strokeStyle='#4dd7e5';
+    ctx.lineWidth=3;
+    ctx.stroke();
+    
+    // Central island label
+    ctx.fillStyle='#4dd7e5';
+    ctx.font='11px system-ui';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText('CENTRAL ISLAND', 0, 0);
+    
+    // Draw Yield lines at entries
+    ctx.strokeStyle='#ffd166';
+    ctx.lineWidth=4;
+    ctx.beginPath();
+    ctx.moveTo(-32, -r-25); ctx.lineTo(32, -r-25);
+    ctx.moveTo(r+25, -32); ctx.lineTo(r+25, 32);
+    ctx.moveTo(-32, r+25); ctx.lineTo(32, r+25);
+    ctx.moveTo(-r-25, -32); ctx.lineTo(-r-25, 32);
+    ctx.stroke();
+    
+    // Draw vehicles & trails
+    vehicles.forEach(v=>{
+        if($('trails').checked && v.trail.length>1){
+            ctx.strokeStyle='#4dd7e544';
+            ctx.lineWidth=2;
+            ctx.beginPath();
+            v.trail.forEach((p,i)=>{
+                i?ctx.lineTo(p.x, p.y):ctx.moveTo(p.x, p.y);
+            });
+            ctx.stroke();
+        }
+        
+        const speed=kmh(v.v);
+        const color=speed<3?'#ff647c':speed<cfg.limit*.4?'#ffd166':'#57df9b';
+        
+        ctx.save();
+        ctx.translate(v.x, v.y);
+        // Calculate heading angle
+        const heading = Math.atan2(v.y, v.x) + Math.PI/2;
+        ctx.rotate(heading);
+        
+        ctx.fillStyle='#0008';
+        ctx.fillRect(-5, 4, 14, 22);
+        ctx.fillStyle=color;
+        ctx.beginPath();
+        ctx.roundRect(-6, -10, 12, 20, 3);
+        ctx.fill();
+        
+        ctx.fillStyle='#b9e8f5';
+        ctx.fillRect(-4, -8, 8, 6);
+        ctx.restore();
+    });
+    
+    ctx.restore();
+}
+
+function drawChart(c,context,series){
+    const {w,h}=resize(c,context);
+    context.clearRect(0,0,w,h);
+    const left=35,right=10,top=10,bottom=25,pw=w-left-right,ph=h-top-bottom;
+    context.fillStyle='#121b2c';
+    context.fillRect(0,0,w,h);
+    const maxT=Math.max(10,history.length?history[history.length-1].t:10),minT=Math.max(0,maxT-120);
+    context.font='9px system-ui';
+    context.textAlign='right';
+    context.textBaseline='middle';
+    for(let i=0;i<=4;i++){
+        const y=top+ph*i/4;
+        context.strokeStyle='#293750';
+        context.lineWidth=1;
+        context.beginPath();context.moveTo(left,y);context.lineTo(w-right,y);context.stroke();
+        context.fillStyle='#7f91ad';context.fillText(String(Math.round(series.max*(1-i/4))),left-7,y)
+    }
+    for(let i=0;i<=4;i++){
+        const x=left+pw*i/4;
+        context.fillStyle='#7f91ad';context.textAlign='center';context.textBaseline='top';
+        context.fillText(fmtTime(minT+(maxT-minT)*i/4),x,h-bottom+7)
+    }
+    series.lines.forEach(line=>{
+        context.strokeStyle=line.color;
+        context.lineWidth=2;
+        context.beginPath();
+        let started=false;
+        history.forEach(p=>{
+            if(p.t<minT)return;
+            const x=left+pw*(p.t-minT)/Math.max(1,maxT-minT),y=top+ph*(1-clamp(p[line.key]/line.scale,0,1));
+            if(!started){context.moveTo(x,y);started=true}else context.lineTo(x,y)
+        });
+        if(started)context.stroke()
+    })
+}
+
+function drawCharts(){
+    drawChart(pc,pctx,{max:60,lines:[{key:'speed',color:'#4dd7e5',scale:60},{key:'queue',color:'#ffd166',scale:25},{key:'congestion',color:'#ff647c',scale:100}]});
+    drawChart(fc,fctx,{max:100,lines:[{key:'throughput',color:'#57df9b',scale:100},{key:'density',color:'#7c9cff',scale:50}]})
+}
+
+function loop(now){
+    if(!lastFrame)lastFrame=now;
+    const realDt=Math.min(.08,(now-lastFrame)/1000);
+    lastFrame=now;
+    if(running){
+        accumulator+=realDt*cfg.speedTime;
+        let count=0;
+        while(accumulator>=cfg.dt&&count<100){
+            step(cfg.dt);
+            accumulator-=cfg.dt;
+            count++
+        }
+        if(count>=100)accumulator=0;
+    }
+    if(frame%2===0)drawRoad();
+    frame++;
+    requestAnimationFrame(loop)
+}
+
+function play(){running=true;setRunStatus();$('simMessage').textContent='Roundabout simulation running.'}
+function pause(){running=false;setRunStatus();$('simMessage').textContent='Simulation paused.'}
+
+$('playBtn').onclick=play;
+$('toolbarPlay').onclick=()=>running?pause():play();
+$('pauseBtn').onclick=pause;
+$('stepBtn').onclick=()=>{pause();step(cfg.dt);drawRoad();drawCharts()};
+$('resetBtn').onclick=reset;
+$('toolbarReset').onclick=reset;
+$('clearLog').onclick=()=>{events=[];renderLog()};
+$('preset').onchange=e=>applyPreset(e.target.value);
+['demand','limit','dt','radius','speedTime'].forEach(k=>$(k).addEventListener('input',readControls));
+$('trails').onchange=drawRoad;
+$('collapseBtn').onclick=()=>{
+    const side=$('sidebar');
+    side.classList.toggle('collapsed');
+    $('collapseBtn').textContent=side.classList.contains('collapsed')?'Show controls +':'Hide controls −';
+};
+
+window.addEventListener('resize',()=>{drawRoad();drawCharts()});
+syncControls();
+reset();
+requestAnimationFrame(loop);
+})();
+</script></body></html>
